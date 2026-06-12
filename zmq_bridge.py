@@ -65,13 +65,17 @@ class XrtZmqBridge(Node):
                 HandPressures, PRESSURE_TOPIC.format(side=s),
                 lambda msg, side=s: self.on_pressures(side, msg), 10)
 
+        self.latest_cmd = {s: np.zeros(NUM_JOINTS, dtype=np.float32) for s in SIDES}
+        self.cmd_pending = False
+
         self.ctx = zmq.Context()
         self.fb_pub = self.ctx.socket(zmq.PUB)
+        self.fb_pub.setsockopt(zmq.LINGER, 0)
         self.fb_pub.bind(f'tcp://*:{fb_port}')
         self.cmd_port = cmd_port
         self._cmd_thread = threading.Thread(target=self.cmd_loop, daemon=True)
         self._cmd_thread.start()
-        self.create_timer(1.0 / rate, self.publish_feedback)
+        self.create_timer(1.0 / rate, self.on_timer)
         self.get_logger().info(
             f'bridge up: cmd SUB :{cmd_port}, feedback PUB :{fb_port}')
 
@@ -104,28 +108,42 @@ class XrtZmqBridge(Node):
         sub = self.ctx.socket(zmq.SUB)
         sub.setsockopt(zmq.SUBSCRIBE, b'')
         sub.setsockopt(zmq.CONFLATE, 1)
+        sub.setsockopt(zmq.LINGER, 0)
         sub.bind(f'tcp://*:{self.cmd_port}')
-        while rclpy.ok():
-            if not sub.poll(timeout=100):
-                continue
-            arr = np.frombuffer(sub.recv(), dtype=np.float32)
-            if arr.shape[0] != 2 * NUM_JOINTS:
-                continue
-            halves = {'left': arr[:NUM_JOINTS], 'right': arr[NUM_JOINTS:]}
-            for s in SIDES:
+        try:
+            while rclpy.ok():
+                if not sub.poll(timeout=100):
+                    continue
+                arr = np.frombuffer(sub.recv(), dtype=np.float32)
+                if arr.shape[0] != 2 * NUM_JOINTS:
+                    continue
                 with self.lock:
-                    if not self.present[s]:
-                        continue
+                    self.latest_cmd['left'][:] = arr[:NUM_JOINTS]
+                    self.latest_cmd['right'][:] = arr[NUM_JOINTS:]
+                    self.cmd_pending = True
+        finally:
+            sub.close()
+
+    def on_timer(self):
+        # cmd: forward the latest frame (if any) as one-point trajectories
+        with self.lock:
+            pending = self.cmd_pending
+            self.cmd_pending = False
+            cmd = {s: self.latest_cmd[s].copy() for s in SIDES}
+            present = dict(self.present)
+        if pending:
+            for s in SIDES:
+                if not present[s]:
+                    continue
                 traj = JointTrajectory()
                 traj.joint_names = self.joint_names[s]
                 pt = JointTrajectoryPoint()
-                pt.positions = [float(v) for v in halves[s]]
+                pt.positions = [float(v) for v in cmd[s]]
                 pt.time_from_start = Duration(
                     sec=0, nanosec=int(self.traj_time * 1e9))
                 traj.points = [pt]
                 self.traj_pubs[s].publish(traj)
-
-    def publish_feedback(self):
+        # feedback: pack and send the state frame
         frame = np.zeros(FB_FRAME_LEN, dtype=np.float32)
         with self.lock:
             frame[0] = 1.0 if self.present['left'] else 0.0
@@ -136,6 +154,12 @@ class XrtZmqBridge(Node):
                 frame[base + NUM_JOINTS:base + 2 * NUM_JOINTS] = self.dq[s]
                 frame[base + 2 * NUM_JOINTS:base + SIDE_LEN] = self.press[s]
         self.fb_pub.send(frame.tobytes())
+
+
+    def close(self):
+        self._cmd_thread.join(timeout=1.0)
+        self.fb_pub.close()
+        self.ctx.term()
 
 
 def main():
@@ -154,6 +178,7 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
+        node.close()
         node.destroy_node()
         rclpy.try_shutdown()
 
