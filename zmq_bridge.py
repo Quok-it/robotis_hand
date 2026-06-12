@@ -14,7 +14,7 @@ Each cmd frame becomes a one-point JointTrajectory with a short
 time_from_start so the 100 Hz JTC interpolates instead of stepping.
 
 Usage (inside the container, after the launch file):
-    pip install pyzmq   # once
+    apt-get install python3-zmq   # once (pip not available in container)
     python3 /root/ros2_ws/src/robotis_hand/zmq_bridge.py
 """
 import argparse
