@@ -1,0 +1,104 @@
+--- a/src/dynamixel/dynamixel.cpp
++++ b/src/dynamixel/dynamixel.cpp
+@@ -281,6 +281,8 @@
+     bool error_code_exists = dxl_info_.GetDxlControlItem(
+       comm_id, id, "Error Code", error_code_addr, error_code_size);
+ 
++    bool concrete_error = false;
++
+     if (hw_error_exists) {
+       uint32_t hw_error_status = 0;
+       ReadItem(comm_id, id, "Hardware Error Status", hw_error_status);
+@@ -301,6 +303,7 @@
+       }
+ 
+       if (!error_string.empty()) {
++        concrete_error = true;
+         fprintf(
+           stderr, "[comm_id:%03d][ID:%03d] Hardware Error Details: 0x%x (%d): %s\n",
+           comm_id, id, hw_error_byte, hw_error_byte, error_string.c_str());
+@@ -311,6 +314,7 @@
+ 
+       uint8_t error_code_byte = static_cast<uint8_t>(error_code);
+       if (error_code_byte != 0x00) {
++        concrete_error = true;
+         const ErrorCodeInfo * error_info = get_error_code_info(error_code_byte);
+         if (error_info) {
+           fprintf(
+@@ -331,8 +335,20 @@
+       );
+     }
+ 
+-    Reboot(id);
+-    return DxlError::DXL_HARDWARE_ERROR;
++    // A status packet whose only error indication is the alert flag (0x80), with no
++    // readable non-zero error register behind it, is treated as a stale latched alert
++    // (seen on HX5 hand controllers): communication works, so initialization proceeds.
++    bool pure_alert = (dxl_error & 0x7F) == 0;
++    if (pure_alert && !concrete_error) {
++      fprintf(
++        stderr,
++        "[comm_id:%03d][ID:%03d] Alert flag set but no underlying error detail found."
++        " Proceeding with initialization.\n",
++        comm_id, id);
++    } else {
++      Reboot(id);
++      return DxlError::DXL_HARDWARE_ERROR;
++    }
+   } else {
+     std::string model_name = dxl_info_.GetModelName(dxl_model_number);
+     fprintf(
+@@ -379,11 +395,18 @@
+       stderr, "[ID:%03d] COMM_ERROR : %s\n",
+       id, packet_handler_->getTxRxResult(dxl_comm_result));
+     return DxlError::DXL_REBOOT_FAIL;
+-  } else if (dxl_error != 0) {
++  } else if ((dxl_error & 0x7F) != 0) {
+     fprintf(
+       stderr, "[ID:%03d] RX_PACKET_ERROR : %s\n",
+       id, packet_handler_->getRxPacketError(dxl_error));
+     return DxlError::DXL_REBOOT_FAIL;
++  } else if (dxl_error != 0) {
++    // Alert flag only: the reboot instruction itself succeeded; the device is
++    // reporting a (possibly stale) hardware alert alongside the reply.
++    fprintf(
++      stderr, "[ID:%03d] Reboot acknowledged with alert flag set (%s)\n",
++      id, packet_handler_->getRxPacketError(dxl_error));
++    return DxlError::OK;
+   }
+ 
+   fprintf(stderr, "[ID:%03d] Reboot Success!\n", id);
+@@ -732,6 +755,17 @@
+         return DxlError::ITEM_WRITE_FAIL;
+       }
+     } else if (dxl_error != 0) {
++      bool is_pure_alert = (dxl_error & 0x7F) == 0;
++      if (is_pure_alert) {
++        // Alert flag only: the write itself was accepted (mirrors ReadItem behavior).
++        fprintf(
++          stderr,
++          "[WriteItem][ID:%03d][comm_id:%03d] RX_PACKET_ERROR : %s\n",
++          id,
++          comm_id,
++          packet_handler_->getRxPacketError(dxl_error));
++        return DxlError::OK;
++      }
+       fprintf(
+         stderr,
+         "[WriteItem][ID:%03d][comm_id:%03d] RX_PACKET_ERROR : %s\n",
+@@ -953,13 +987,14 @@
+           id,
+           packet_handler_->getTxRxResult(dxl_comm_result));
+         return DxlError::ITEM_READ_FAIL;
+-      } else if (dxl_error != 0) {
++      } else if ((dxl_error & 0x7F) != 0) {
+         fprintf(
+           stderr, "[ID:%03d] RX_PACKET_ERROR : %s\n",
+           id,
+           packet_handler_->getRxPacketError(dxl_error));
+         return DxlError::ITEM_READ_FAIL;
+       } else {
++        // dxl_error is either 0 or alert-flag-only; the read data is valid.
+         it_read_item->read_flag = true;
+       }
+     }
