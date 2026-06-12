@@ -16,7 +16,11 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_IMAGE="robotis/robotis-hand:0.3.0"
 OUT_TAG="${1:-robotis/robotis-hand:0.3.0-hx5-alertfix}"
 
-docker pull "$BASE_IMAGE"
+# skip the pull when the base image is already present (e.g. docker load'ed
+# from a tarball — save/load strips registry digests, so pull would re-download)
+if ! docker image inspect "$BASE_IMAGE" >/dev/null 2>&1; then
+    docker pull "$BASE_IMAGE"
+fi
 docker rm -f hx5-alertfix-build 2>/dev/null || true
 
 docker run --name hx5-alertfix-build \
