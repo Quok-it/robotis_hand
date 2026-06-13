@@ -30,6 +30,19 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
+import glob
+
+
+def _default_port():
+    """Prefer the stable FTDI by-id symlink over /dev/ttyUSBN.
+
+    The U2D2's ttyUSB number drifts across replugs/power-cycles, but the
+    /dev/serial/by-id/ symlink is keyed to the adapter serial and never
+    changes. Auto-detect it; fall back to /dev/ttyUSB0 if not present.
+    """
+    matches = sorted(glob.glob('/dev/serial/by-id/usb-FTDI*'))
+    return matches[0] if matches else '/dev/ttyUSB0'
+
 
 def generate_launch_description():
     # Declare launch arguments
@@ -59,8 +72,8 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'port_name',
-            default_value='/dev/ttyUSB0',
-            description='Port name for hardware connection.',
+            default_value=_default_port(),
+            description='Port name for hardware connection (auto-detects FTDI by-id).',
         ),
         DeclareLaunchArgument(
             'init_position',
