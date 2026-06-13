@@ -1,0 +1,65 @@
+--- a/c++/src/dynamixel_sdk/protocol2_packet_handler.cpp
++++ b/c++/src/dynamixel_sdk/protocol2_packet_handler.cpp
+@@ -480,7 +480,7 @@
+   int result                 = COMM_TX_FAIL;
+ 
+   uint8_t txpacket[10]        = {0};
+-  uint8_t rxpacket[14]        = {0};
++  uint8_t rxpacket[RXPACKET_MAX_LEN]        = {0};  // was [14]: arm64 guard-page overflow on misparsed status
+ 
+   if (id >= BROADCAST_ID)
+     return COMM_NOT_AVAILABLE;
+@@ -609,7 +609,7 @@
+ int Protocol2PacketHandler::reboot(PortHandler *port, uint8_t id, uint8_t *error)
+ {
+   uint8_t txpacket[10]        = {0};
+-  uint8_t rxpacket[11]        = {0};
++  uint8_t rxpacket[RXPACKET_MAX_LEN]        = {0};  // was [11]: arm64 guard-page overflow on misparsed reboot status
+ 
+   txpacket[PKT_ID]            = id;
+   txpacket[PKT_LENGTH_L]      = 3;
+@@ -622,7 +622,7 @@
+ int Protocol2PacketHandler::clearMultiTurn(PortHandler *port, uint8_t id, uint8_t *error)
+ {
+   uint8_t txpacket[15]        = {0};
+-  uint8_t rxpacket[11]        = {0};
++  uint8_t rxpacket[RXPACKET_MAX_LEN]        = {0};  // was [11]: arm64 guard-page overflow on misparsed reboot status
+ 
+   txpacket[PKT_ID]            = id;
+   txpacket[PKT_LENGTH_L]      = 8;
+@@ -640,7 +640,7 @@
+ int Protocol2PacketHandler::clearError(PortHandler *port, uint8_t id, uint8_t *error)
+ {
+   uint8_t txpacket[15]        = {0};
+-  uint8_t rxpacket[11]        = {0};
++  uint8_t rxpacket[RXPACKET_MAX_LEN]        = {0};  // was [11]: arm64 guard-page overflow on misparsed reboot status
+ 
+   txpacket[PKT_ID]            = id;
+   txpacket[PKT_LENGTH_L]      = 8;
+@@ -658,7 +658,7 @@
+ int Protocol2PacketHandler::factoryReset(PortHandler *port, uint8_t id, uint8_t option, uint8_t *error)
+ {
+   uint8_t txpacket[11]        = {0};
+-  uint8_t rxpacket[11]        = {0};
++  uint8_t rxpacket[RXPACKET_MAX_LEN]        = {0};  // was [11]: arm64 guard-page overflow on misparsed reboot status
+ 
+   txpacket[PKT_ID]            = id;
+   txpacket[PKT_LENGTH_L]      = 4;
+@@ -867,7 +867,7 @@
+   int result                  = COMM_TX_FAIL;
+ 
+   uint8_t *txpacket           = (uint8_t *)malloc(length + 12 + (length / 3));
+-  uint8_t rxpacket[11]        = {0};
++  uint8_t rxpacket[RXPACKET_MAX_LEN]        = {0};  // was [11]: arm64 guard-page overflow on misparsed reboot status
+ 
+   if (txpacket == NULL)
+     return result;
+@@ -956,7 +956,7 @@
+   int result                  = COMM_TX_FAIL;
+ 
+   uint8_t *txpacket           = (uint8_t *)malloc(length + 12 + (length / 3));
+-  uint8_t rxpacket[11]        = {0};
++  uint8_t rxpacket[RXPACKET_MAX_LEN]        = {0};  // was [11]: arm64 guard-page overflow on misparsed reboot status
+ 
+   if (txpacket == NULL)
+     return result;

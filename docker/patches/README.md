@@ -8,10 +8,21 @@ which is NOT on Docker Hub — build it locally once per machine:
 ```
 
 This pulls the stock multi-arch `0.3.0` image (works on x86 dev boxes and the
-G1's arm64 PC2 alike), applies `dynamixel-alertfix.patch` (stale latched alert
-flag on the HX5 controller is non-fatal at init), rebuilds
+G1's arm64 PC2 alike), applies two source patches, rebuilds `dynamixel_sdk` +
 `dynamixel_hardware_interface`, and bakes in `python3-zmq` for `zmq_bridge.py`
 (the XRT teleop bridge, see repo root).
+
+Patches:
+- `dynamixel-alertfix.patch` — the stale latched hardware-alert flag on the HX5
+  hub controller (ID 110) is treated as non-fatal at init.
+- `sdk-rxpacket-overflow.patch` — **required on arm64 (the G1's PC2).** The
+  DynamixelSDK's `reboot()`/`ping()`/etc. size their status buffer at 11–14
+  bytes, but `rxPacket` can read up to `RXPACKET_MAX_LEN` (1024) when bus noise
+  during a reboot is misparsed as a long packet. That overruns the stack
+  buffer: harmless on x86, but a guard-page `SIGSEGV` on arm64. Without this
+  patch, on-robot bring-up crashes mid-init (`Segmentation fault ... in
+  Protocol2PacketHandler::rxPacket`) and `/joint_states` never publishes. The
+  fix sizes those buffers to `RXPACKET_MAX_LEN`.
 
 ## Quickstart on the G1 (PC2)
 

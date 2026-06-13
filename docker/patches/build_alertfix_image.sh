@@ -25,12 +25,20 @@ docker rm -f hx5-alertfix-build 2>/dev/null || true
 
 docker run --name hx5-alertfix-build \
     -v "$DIR/dynamixel-alertfix.patch:/tmp/dynamixel-alertfix.patch:ro" \
+    -v "$DIR/sdk-rxpacket-overflow.patch:/tmp/sdk-rxpacket-overflow.patch:ro" \
     "$BASE_IMAGE" bash -ec '
         cd /root/ros2_ws/src/dynamixel_hardware_interface
         patch -p1 --forward < /tmp/dynamixel-alertfix.patch
+        # SDK fix: single-command status buffers (reboot/ping/...) are sized 11/14
+        # but rxPacket can read up to RXPACKET_MAX_LEN on a misparsed length, which
+        # overflows the stack buffer and SIGSEGVs on arm64 (guard page). Harmless on
+        # x86, fatal on the Jetson — this is what crashed on-robot bring-up.
+        cd /root/ros2_ws/src/DynamixelSDK
+        patch -p1 --forward < /tmp/sdk-rxpacket-overflow.patch
         source /opt/ros/jazzy/setup.bash
         cd /root/ros2_ws
-        colcon build --symlink-install --packages-select dynamixel_hardware_interface \
+        colcon build --symlink-install \
+            --packages-select dynamixel_sdk dynamixel_hardware_interface \
             --cmake-args -DCMAKE_BUILD_TYPE=Release
         apt-get update
         apt-get install -y --no-install-recommends python3-zmq
