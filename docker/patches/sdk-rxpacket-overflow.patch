@@ -1,6 +1,6 @@
-diff -ruN img_stock/DynamixelSDK/c++/src/dynamixel_sdk/protocol2_packet_handler.cpp sdkfix3/c++/src/dynamixel_sdk/protocol2_packet_handler.cpp
+diff -ruN img_stock/DynamixelSDK/c++/src/dynamixel_sdk/protocol2_packet_handler.cpp sdkfix4/c++/src/dynamixel_sdk/protocol2_packet_handler.cpp
 --- a/c++/src/dynamixel_sdk/protocol2_packet_handler.cpp	2026-05-12 02:20:34.000000000 -0700
-+++ b/c++/src/dynamixel_sdk/protocol2_packet_handler.cpp	2026-06-14 16:18:34.932635665 -0700
++++ b/c++/src/dynamixel_sdk/protocol2_packet_handler.cpp	2026-06-14 16:50:34.806461309 -0700
 @@ -36,6 +36,7 @@
  
  #define TXPACKET_MAX_LEN    (1*1024)
@@ -9,72 +9,82 @@ diff -ruN img_stock/DynamixelSDK/c++/src/dynamixel_sdk/protocol2_packet_handler.
  
  ///////////////// for Protocol 2.0 Packet /////////////////
  #define PKT_HEADER0             0
-@@ -480,7 +481,7 @@
+@@ -313,7 +314,8 @@
+ 
+   while(true)
+   {
+-    rx_length += port->readPort(&rxpacket[rx_length], wait_length - rx_length);
++    if (wait_length > rx_length)
++      rx_length += port->readPort(&rxpacket[rx_length], wait_length - rx_length);
+     if (rx_length >= wait_length)
+     {
+       uint16_t idx = 0;
+@@ -480,7 +482,7 @@
    int result                 = COMM_TX_FAIL;
  
    uint8_t txpacket[10]        = {0};
 -  uint8_t rxpacket[14]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    if (id >= BROADCAST_ID)
      return COMM_NOT_AVAILABLE;
-@@ -609,7 +610,7 @@
+@@ -609,7 +611,7 @@
  int Protocol2PacketHandler::reboot(PortHandler *port, uint8_t id, uint8_t *error)
  {
    uint8_t txpacket[10]        = {0};
 -  uint8_t rxpacket[11]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    txpacket[PKT_ID]            = id;
    txpacket[PKT_LENGTH_L]      = 3;
-@@ -622,7 +623,7 @@
+@@ -622,7 +624,7 @@
  int Protocol2PacketHandler::clearMultiTurn(PortHandler *port, uint8_t id, uint8_t *error)
  {
    uint8_t txpacket[15]        = {0};
 -  uint8_t rxpacket[11]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    txpacket[PKT_ID]            = id;
    txpacket[PKT_LENGTH_L]      = 8;
-@@ -640,7 +641,7 @@
+@@ -640,7 +642,7 @@
  int Protocol2PacketHandler::clearError(PortHandler *port, uint8_t id, uint8_t *error)
  {
    uint8_t txpacket[15]        = {0};
 -  uint8_t rxpacket[11]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    txpacket[PKT_ID]            = id;
    txpacket[PKT_LENGTH_L]      = 8;
-@@ -658,7 +659,7 @@
+@@ -658,7 +660,7 @@
  int Protocol2PacketHandler::factoryReset(PortHandler *port, uint8_t id, uint8_t option, uint8_t *error)
  {
    uint8_t txpacket[11]        = {0};
 -  uint8_t rxpacket[11]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    txpacket[PKT_ID]            = id;
    txpacket[PKT_LENGTH_L]      = 4;
-@@ -867,7 +868,7 @@
+@@ -867,7 +869,7 @@
    int result                  = COMM_TX_FAIL;
  
    uint8_t *txpacket           = (uint8_t *)malloc(length + 12 + (length / 3));
 -  uint8_t rxpacket[11]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    if (txpacket == NULL)
      return result;
-@@ -956,7 +957,7 @@
+@@ -956,7 +958,7 @@
    int result                  = COMM_TX_FAIL;
  
    uint8_t *txpacket           = (uint8_t *)malloc(length + 12 + (length / 3));
 -  uint8_t rxpacket[11]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    if (txpacket == NULL)
      return result;
-diff -ruN img_stock/DynamixelSDK/ros/dynamixel_sdk/src/dynamixel_sdk/protocol2_packet_handler.cpp sdkfix3/ros/dynamixel_sdk/src/dynamixel_sdk/protocol2_packet_handler.cpp
+diff -ruN img_stock/DynamixelSDK/ros/dynamixel_sdk/src/dynamixel_sdk/protocol2_packet_handler.cpp sdkfix4/ros/dynamixel_sdk/src/dynamixel_sdk/protocol2_packet_handler.cpp
 --- a/ros/dynamixel_sdk/src/dynamixel_sdk/protocol2_packet_handler.cpp	2026-05-12 02:20:34.000000000 -0700
-+++ b/ros/dynamixel_sdk/src/dynamixel_sdk/protocol2_packet_handler.cpp	2026-06-14 16:18:34.930312155 -0700
++++ b/ros/dynamixel_sdk/src/dynamixel_sdk/protocol2_packet_handler.cpp	2026-06-14 16:50:34.802574149 -0700
 @@ -36,6 +36,7 @@
  
  #define TXPACKET_MAX_LEN    (1*1024)
@@ -83,66 +93,76 @@ diff -ruN img_stock/DynamixelSDK/ros/dynamixel_sdk/src/dynamixel_sdk/protocol2_p
  
  ///////////////// for Protocol 2.0 Packet /////////////////
  #define PKT_HEADER0             0
-@@ -480,7 +481,7 @@
+@@ -313,7 +314,8 @@
+ 
+   while(true)
+   {
+-    rx_length += port->readPort(&rxpacket[rx_length], wait_length - rx_length);
++    if (wait_length > rx_length)
++      rx_length += port->readPort(&rxpacket[rx_length], wait_length - rx_length);
+     if (rx_length >= wait_length)
+     {
+       uint16_t idx = 0;
+@@ -480,7 +482,7 @@
    int result                 = COMM_TX_FAIL;
  
    uint8_t txpacket[10]        = {0};
 -  uint8_t rxpacket[14]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    if (id >= BROADCAST_ID)
      return COMM_NOT_AVAILABLE;
-@@ -609,7 +610,7 @@
+@@ -609,7 +611,7 @@
  int Protocol2PacketHandler::reboot(PortHandler *port, uint8_t id, uint8_t *error)
  {
    uint8_t txpacket[10]        = {0};
 -  uint8_t rxpacket[11]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    txpacket[PKT_ID]            = id;
    txpacket[PKT_LENGTH_L]      = 3;
-@@ -622,7 +623,7 @@
+@@ -622,7 +624,7 @@
  int Protocol2PacketHandler::clearMultiTurn(PortHandler *port, uint8_t id, uint8_t *error)
  {
    uint8_t txpacket[15]        = {0};
 -  uint8_t rxpacket[11]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    txpacket[PKT_ID]            = id;
    txpacket[PKT_LENGTH_L]      = 8;
-@@ -640,7 +641,7 @@
+@@ -640,7 +642,7 @@
  int Protocol2PacketHandler::clearError(PortHandler *port, uint8_t id, uint8_t *error)
  {
    uint8_t txpacket[15]        = {0};
 -  uint8_t rxpacket[11]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    txpacket[PKT_ID]            = id;
    txpacket[PKT_LENGTH_L]      = 8;
-@@ -658,7 +659,7 @@
+@@ -658,7 +660,7 @@
  int Protocol2PacketHandler::factoryReset(PortHandler *port, uint8_t id, uint8_t option, uint8_t *error)
  {
    uint8_t txpacket[11]        = {0};
 -  uint8_t rxpacket[11]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    txpacket[PKT_ID]            = id;
    txpacket[PKT_LENGTH_L]      = 4;
-@@ -867,7 +868,7 @@
+@@ -867,7 +869,7 @@
    int result                  = COMM_TX_FAIL;
  
    uint8_t *txpacket           = (uint8_t *)malloc(length + 12 + (length / 3));
 -  uint8_t rxpacket[11]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    if (txpacket == NULL)
      return result;
-@@ -956,7 +957,7 @@
+@@ -956,7 +958,7 @@
    int result                  = COMM_TX_FAIL;
  
    uint8_t *txpacket           = (uint8_t *)malloc(length + 12 + (length / 3));
 -  uint8_t rxpacket[11]        = {0};
-+  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14; rxPacket may write up to len+7)
++  uint8_t rxpacket[RXPACKET_MAX_LEN + 16]        = {0};  // arm64 overflow fix (was 11/14)
  
    if (txpacket == NULL)
      return result;
