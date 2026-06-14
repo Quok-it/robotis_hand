@@ -32,39 +32,32 @@ from launch_ros.substitutions import FindPackageShare
 
 import glob
 import os
-
-# USB product IDs: the U2D2 hand adapter is a single-channel FT232H (0x6014);
-# the G1's onboard FTDI is a quad FT4232H (0x6011) that also enumerates as
-# ttyUSB* and steals the low numbers. Match the U2D2 by product so we never
-# grab the robot's serial bus, regardless of ttyUSB enumeration order.
-_U2D2_PRODUCT = '6014'
+from collections import Counter
 
 
-def _usb_product_id(tty_name):
-    """Read the USB idProduct for a ttyUSB* by walking up its sysfs node."""
-    path = os.path.realpath('/sys/class/tty/%s/device' % tty_name)
-    for _ in range(6):
-        idfile = os.path.join(path, 'idProduct')
-        if os.path.exists(idfile):
-            with open(idfile) as f:
-                return f.read().strip()
-        path = os.path.dirname(path)
-    return ''
+def _ftdi_serial(byid_path):
+    """Extract the FTDI serial from a /dev/serial/by-id entry."""
+    base = os.path.basename(byid_path)
+    if 'Serial_Converter_' in base:
+        return base.split('Serial_Converter_', 1)[1].split('-if', 1)[0]
+    return base
 
 
 def _default_port():
-    """Resolve the U2D2 (hand) port via its stable by-id symlink.
+    """Resolve the U2D2 (hand) port from /dev/serial/by-id (works in-container).
 
-    ttyUSB numbers drift across replugs/power-cycles and the G1 has its own
-    FTDI on the same bus, so we filter the FTDI by-id entries down to the
-    FT232H U2D2 (product 0x6014), never the G1's FT4232H (0x6011). Falls back
-    to /dev/ttyUSB0 if no U2D2 is found.
+    ttyUSB numbers drift across replugs/power-cycles, and the G1's own onboard
+    FTDI sits on the same bus. That onboard part is a quad FT4232H: one serial
+    shared across four interfaces (-if00..-if03). The U2D2 is a single-channel
+    FT232H: one serial, one interface. So the hand is the FTDI whose serial
+    appears exactly once. Falls back to /dev/ttyUSB0 if nothing distinct.
     """
-    for dev in sorted(glob.glob('/dev/serial/by-id/usb-FTDI*')):
-        tty = os.path.basename(os.path.realpath(dev))
-        if _usb_product_id(tty) == _U2D2_PRODUCT:
-            return dev
-    return '/dev/ttyUSB0'
+    entries = sorted(glob.glob('/dev/serial/by-id/usb-FTDI*'))
+    counts = Counter(_ftdi_serial(e) for e in entries)
+    for e in entries:
+        if counts[_ftdi_serial(e)] == 1:
+            return e
+    return entries[0] if entries else '/dev/ttyUSB0'
 
 
 def generate_launch_description():
