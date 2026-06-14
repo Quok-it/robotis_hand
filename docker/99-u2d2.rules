@@ -1,1 +1,12 @@
+# U2D2 (FTDI) rules for the ROBOTIS hand on the G1.
+#
+# All FTDI ttyUSB: low latency + world-writable (lets the container open them).
 KERNEL=="ttyUSB*", DRIVERS=="ftdi_sio", MODE="0666", ATTR{device/latency_timer}="1"
+#
+# Stable name for the hand's U2D2 so the launch never has to guess a ttyUSB
+# number (the number drifts across replugs, and the G1's own FT4232H grabs the
+# low numbers). The U2D2 is a single-channel FT232H = product 0x6014; the G1's
+# onboard FTDI is a quad FT4232H = 0x6011, so this matches only the U2D2.
+# Result: /dev/ttyHAND_RIGHT -> the hand, always. Visible in the container via
+# the `-v /dev:/dev` mount. Launch with: port_name:=/dev/ttyHAND_RIGHT
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6014", SYMLINK+="ttyHAND_RIGHT", MODE="0666"

@@ -40,6 +40,14 @@ docker run --name hx5-alertfix-build \
         colcon build --symlink-install \
             --packages-select dynamixel_sdk dynamixel_hardware_interface \
             --cmake-args -DCMAKE_BUILD_TYPE=Release
+        # Fail the build if the SDK overflow fix did not actually compile into the
+        # library that gets loaded at runtime (catches patching the wrong copy).
+        if ! strings /root/ros2_ws/install/dynamixel_sdk/lib/libdynamixel_sdk.so \
+             | grep -q DXL_RXPACKET_OVERFLOW_FIX_V2; then
+            echo "ERROR: SDK overflow fix marker missing from built libdynamixel_sdk.so" >&2
+            exit 1
+        fi
+        echo "OK: SDK overflow fix present in built libdynamixel_sdk.so"
         apt-get update
         apt-get install -y --no-install-recommends python3-zmq
         rm -rf /var/lib/apt/lists/*

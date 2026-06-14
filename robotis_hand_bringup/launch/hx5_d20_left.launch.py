@@ -32,32 +32,49 @@ from launch_ros.substitutions import FindPackageShare
 
 import glob
 import os
-from collections import Counter
 
 
-def _ftdi_serial(byid_path):
-    """Extract the FTDI serial from a /dev/serial/by-id entry."""
-    base = os.path.basename(byid_path)
-    if 'Serial_Converter_' in base:
-        return base.split('Serial_Converter_', 1)[1].split('-if', 1)[0]
-    return base
+def _ftdi_ids(tty):
+    """Return (idVendor, idProduct) for a /dev/ttyUSB* via sysfs, or ('', '')."""
+    path = os.path.realpath('/sys/class/tty/%s/device' % os.path.basename(tty))
+    for _ in range(8):
+        vfile, pfile = os.path.join(path, 'idVendor'), os.path.join(path, 'idProduct')
+        if os.path.exists(vfile) and os.path.exists(pfile):
+            try:
+                with open(vfile) as f:
+                    vid = f.read().strip()
+                with open(pfile) as f:
+                    pid = f.read().strip()
+                return vid, pid
+            except OSError:
+                return '', ''
+        parent = os.path.dirname(path)
+        if parent == path:
+            break
+        path = parent
+    return '', ''
 
 
 def _default_port():
-    """Resolve the U2D2 (hand) port from /dev/serial/by-id (works in-container).
+    """Resolve the U2D2 (hand) serial port, robustly and in-container.
 
-    ttyUSB numbers drift across replugs/power-cycles, and the G1's own onboard
-    FTDI sits on the same bus. That onboard part is a quad FT4232H: one serial
-    shared across four interfaces (-if00..-if03). The U2D2 is a single-channel
-    FT232H: one serial, one interface. So the hand is the FTDI whose serial
-    appears exactly once. Falls back to /dev/ttyUSB0 if nothing distinct.
+    1. /dev/ttyHAND_LEFT  - stable udev symlink (install docker/99-u2d2.rules
+       on the host); most reliable, survives any ttyUSB renumbering.
+    2. sysfs scan of /dev/ttyUSB* for the FT232H U2D2 (0403:6014), never the
+       G1's onboard FT4232H (0403:6011). Works in the container (/sys is mounted).
+    3. /dev/serial/by-id FTDI entry, if present.
+    4. /dev/ttyUSB0 as a last resort.
     """
-    entries = sorted(glob.glob('/dev/serial/by-id/usb-FTDI*'))
-    counts = Counter(_ftdi_serial(e) for e in entries)
-    for e in entries:
-        if counts[_ftdi_serial(e)] == 1:
-            return e
-    return entries[0] if entries else '/dev/ttyUSB0'
+    if os.path.exists('/dev/ttyHAND_LEFT'):
+        return '/dev/ttyHAND_LEFT'
+    for tty in sorted(glob.glob('/dev/ttyUSB*')):
+        vid, pid = _ftdi_ids(tty)
+        if vid == '0403' and pid == '6014':
+            return tty
+    byid = sorted(glob.glob('/dev/serial/by-id/usb-FTDI*'))
+    if byid:
+        return byid[0]
+    return '/dev/ttyUSB0'
 
 
 def generate_launch_description():
