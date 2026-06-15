@@ -231,7 +231,7 @@
       <gpio name="hand_l_controller">
         <param name="type">controller</param>
         <param name="ID">140</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Table Sync Enable">0</param>
         <param name="Bus Watchdog">100</param>
         <param name="SyncTable 1 ID 1">141</param>
@@ -364,7 +364,7 @@
       <gpio name="dxl141_init">
         <param name="type">controller</param>
         <param name="ID">141</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">13</param>
@@ -388,7 +388,7 @@
       <gpio name="dxl142_init">
         <param name="type">controller</param>
         <param name="ID">142</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -412,7 +412,7 @@
       <gpio name="dxl143_init">
         <param name="type">controller</param>
         <param name="ID">143</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">13</param>
@@ -435,7 +435,7 @@
       <gpio name="dxl144_init">
         <param name="type">controller</param>
         <param name="ID">144</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">13</param>
@@ -458,7 +458,7 @@
       <gpio name="dxl146_init">
         <param name="type">controller</param>
         <param name="ID">146</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -481,7 +481,7 @@
       <gpio name="dxl147_init">
         <param name="type">controller</param>
         <param name="ID">147</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -505,7 +505,7 @@
       <gpio name="dxl148_init">
         <param name="type">controller</param>
         <param name="ID">148</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -528,7 +528,7 @@
       <gpio name="dxl149_init">
         <param name="type">controller</param>
         <param name="ID">149</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -551,7 +551,7 @@
       <gpio name="dxl151_init">
         <param name="type">controller</param>
         <param name="ID">151</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -575,7 +575,7 @@
       <gpio name="dxl152_init">
         <param name="type">controller</param>
         <param name="ID">152</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -599,7 +599,7 @@
       <gpio name="dxl153_init">
         <param name="type">controller</param>
         <param name="ID">153</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -622,7 +622,7 @@
       <gpio name="dxl154_init">
         <param name="type">controller</param>
         <param name="ID">154</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -645,7 +645,7 @@
       <gpio name="dxl156_init">
         <param name="type">controller</param>
         <param name="ID">156</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -669,7 +669,7 @@
       <gpio name="dxl157_init">
         <param name="type">controller</param>
         <param name="ID">157</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -693,7 +693,7 @@
       <gpio name="dxl158_init">
         <param name="type">controller</param>
         <param name="ID">158</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -716,7 +716,7 @@
       <gpio name="dxl159_init">
         <param name="type">controller</param>
         <param name="ID">159</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -739,7 +739,7 @@
       <gpio name="dxl161_init">
         <param name="type">controller</param>
         <param name="ID">161</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -763,7 +763,7 @@
       <gpio name="dxl162_init">
         <param name="type">controller</param>
         <param name="ID">162</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -787,7 +787,7 @@
       <gpio name="dxl163_init">
         <param name="type">controller</param>
         <param name="ID">163</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
@@ -810,7 +810,7 @@
       <gpio name="dxl164_init">
         <param name="type">controller</param>
         <param name="ID">164</param>
-        <param name="Reboot">0</param>
+        <param name="Reboot">1</param>
         <param name="Startup Configuration">2</param>
         <param name="Operating Mode">5</param>
         <param name="Drive Mode">12</param>
